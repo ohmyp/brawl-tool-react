@@ -1,30 +1,33 @@
 import { Icon20User } from '@vkontakte/icons';
-import { CellButton, Div, FormItem, Group, Input, Text } from '@vkontakte/vkui';
+import { CellButton, Div, FormItem, Group, Header, Input, Text } from '@vkontakte/vkui';
 import React, { useEffect, useState } from 'react';
 import fetches from '../fetches';
 
 const Login = () => {
 	const [tag, setTag] = useState(null)
-	const [playerData, setPlayerData] = useState(null)
+	const [refresh, setRefresh] = useState(false)
 	const [error, setError] = useState(false)
 
-    const buttonOnClick = async () => {
-		console.log('buttons');
-		fetches.getPlayerByTag(tag, setPlayerData)
-	}
-
 	useEffect(() => {
-		if (playerData?.error){
-			setError(true)
-		} else if (playerData) {
+		async function fetch() {
 			setError(false)
-			localStorage.brawlTag = tag
-			window.location.reload()
+			if (tag) {
+				await fetches.getPlayerByTag(tag).then(res => {
+						if (res.error) return setError(true)
+						else if (res) {
+							setError(false)
+							localStorage.brawlTag = tag
+							window.location.reload()
+						}
+					})
+			} else ;
 		}
-	}, [playerData])
+		fetch()
+	}, [refresh,]);
 
     return (
         <Group>
+			<Header mode="secondary">Введите тег игрока</Header>
 			<FormItem top="Тег игрока (без #)">
 				<Input
 				type="text"
@@ -34,7 +37,7 @@ const Login = () => {
 				/>
 			</FormItem>
 			<Div>
-				<CellButton onClick={buttonOnClick}>Сохранить тег</CellButton>
+				<CellButton onClick={() => setRefresh(!refresh)}>Сохранить тег</CellButton>
 				{error ? <Text weight="semibold" style={{'color':'red'}}>Введен некорректный тег пользователя</Text> : <></>}
 
 			</Div>

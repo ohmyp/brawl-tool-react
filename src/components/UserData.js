@@ -1,33 +1,27 @@
 import { Avatar, Button, Cell, Group, Header, SimpleCell } from '@vkontakte/vkui';
-import React, { useEffect, useState } from 'react';
-import Fetches from '../fetches';
+import { useSelector } from 'react-redux';
 
 const Userdata = ( {fetchedUser} ) => {
-    const [playerData, setPlayerData] = useState([])
-	const [icons, setIcons] = useState({})
+
+    const userData = useSelector(state => state.userData)
+	const clubData = useSelector(state => state.clubData)
+	const icons = useSelector(state => state.icons)
 
     const logout = () => {
         localStorage.clear()
         window.location.reload()
     }
 
-	useEffect(() => {
-		if (localStorage.brawlTag){
-			Fetches.getPlayerByTag(localStorage.brawlTag, setPlayerData)
-			Fetches.getIcons(setIcons)
-		}
-	}, [])
-
     return (
-        (playerData?.icon?.id && icons) 
+        (userData?.icon?.id && icons) 
         ?
             <Group header={<Header mode="secondary">Пользователь</Header>}>
                 <SimpleCell
                 description={localStorage.brawlTag ? '#'+localStorage.brawlTag.toUpperCase() : ''}
-                before={<Avatar src={icons.player[playerData.icon.id].imageUrl} />}
+                before={<Avatar src={icons.player[userData.icon.id].imageUrl} />}
                 after={localStorage.brawlTag?<Button onClick={logout}>Сменить пользователя</Button>:<></>}
                 >
-                    {playerData.name}
+                    {userData.name}
                 </SimpleCell>
             </Group>
         : 

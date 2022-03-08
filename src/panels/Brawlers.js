@@ -32,9 +32,4 @@ const Brawlers = props => {
 	</Panel>
 )}
 
-Brawlers.propTypes = {
-	id: PropTypes.string.isRequired,
-	go: PropTypes.func.isRequired,
-};
-
 export default Brawlers;

@@ -1,36 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Avatar, Button, Cell, CellButton, Div, FormItem, Group, Header, Input, Panel, PanelHeader, PanelHeaderBack, PanelSpinner, SimpleCell, Text } from '@vkontakte/vkui';
+import { Avatar, Group, Header, Panel, PanelHeader, PanelHeaderBack, PanelSpinner, SimpleCell } from '@vkontakte/vkui';
 import Fetches from '../fetches';
-import { Icon20User } from '@vkontakte/icons';
 import Userdata from '../components/UserData';
 import Login from '../components/Login';
+import { useSelector } from 'react-redux';
 
 const MyStats = ({ id, go, fetchedUser }) => {
-	const [playerData, setPlayerData] = useState(null)
-	const [clubData, setClubData] = useState(null)
+	const userData = useSelector(state => state.userData)
+	const clubData = useSelector(state => state.clubData)
+	const icons = useSelector(state => state.icons)
 	const [brawlersCount, setBrawlersCount] = useState(null)
-	const [icons, setIcons] = useState({})
 	
 	useEffect(() => {
-		let isMounted = true
-		if (localStorage.brawlTag){
-			Fetches.getPlayerByTag(localStorage.brawlTag, setPlayerData)
-			
-			Fetches.getIcons(setIcons)
-			Fetches.getBrawlersCount(setBrawlersCount)
+		async function loadCount() {
+			if (localStorage.brawlTag){
+				let count = await Fetches.getBrawlersCount()
+				setBrawlersCount(count)
+			}
 		}
-		return () => { isMounted = false }
+		loadCount()
 	}, [])
-
-	useEffect(() => {
-		let isMounted = true
-		if (playerData?.club?.tag)
-		Fetches.getClubByTag(playerData?.club?.tag, setClubData)
-		return () => { isMounted = false }
-
-	}, [playerData])
 
 	return(
 	<Panel id={id}>
@@ -40,35 +31,54 @@ const MyStats = ({ id, go, fetchedUser }) => {
 		Статистика
 		</PanelHeader>
 
-		<Userdata fetchedUser={fetchedUser}/>
-
 		{!localStorage.brawlTag? <Login/> :
 		<>
 		<Group>
 			<Header mode="secondary">Данные об акаунте</Header>
-			{playerData && icons && clubData
+			{userData && icons && clubData
 			? 
-			<>
-				<SimpleCell
-				description={`Тег: ${clubData.tag}. Кубков: ${clubData.trophies}. Участников: ${clubData.members.length}`}
-				before={<Avatar src={icons.club[clubData.badgeId].imageUrl} />}
-				>
-					{playerData.club.name}
-				</SimpleCell>
-				
-				<SimpleCell
-				before={<Avatar mode='app' src={icons.player[28000026].imageUrl} />}
-				description={`Рекорд: ${playerData.highestTrophies} кубков.`}
-				>
-					{playerData.trophies} кубка!
-				</SimpleCell>
-				
-				<SimpleCell
-				before={<Avatar mode='app' src={icons.player[28000001].imageUrl} />}
-				description={`Не собрано бравлеров: ${brawlersCount - playerData.brawlers.length}`}
-				>
-					Бравлеров: {playerData.brawlers.length}
-				</SimpleCell>
+				<>
+					<SimpleCell
+					description={localStorage.brawlTag ? '#'+localStorage.brawlTag.toUpperCase() : ''}
+					before={<Avatar src={icons.player[userData.icon.id].imageUrl} />}
+					>
+						{userData.name}
+					</SimpleCell>
+
+					<SimpleCell
+					description={`Тег: ${clubData.tag}. Кубков: ${clubData.trophies}. Участников: ${clubData.members.length}`}
+					before={<Avatar mode='app' src={icons.club[clubData.badgeId].imageUrl} />}
+					>
+						Клуб: "{userData.club.name}"
+					</SimpleCell>
+					
+					<SimpleCell
+					before={<Avatar mode='app' src={icons.player[28000026].imageUrl} />}
+					description={`Рекорд: ${userData.highestTrophies} кубков.`}
+					>
+						Кубков: {userData.trophies}
+					</SimpleCell>
+					
+					<SimpleCell
+					before={<Avatar mode='app' src={icons.player[28000001].imageUrl} />}
+					description={`Не собрано бравлеров: ${brawlersCount - userData.brawlers.length}`}
+					>
+						Бравлеров: {userData.brawlers.length}
+					</SimpleCell>
+					
+					<SimpleCell
+					before={<Avatar mode='app' src={icons.player[28000025].imageUrl} />}
+					description={`3х3: ${userData['3vs3Victories']} побед. Соло: ${userData.soloVictories} побед. Дуо: ${userData.duoVictories} побед.`}
+					>
+						Всего побед: {userData['3vs3Victories'] + userData.duoVictories + userData.soloVictories}
+					</SimpleCell>
+					
+					<SimpleCell
+					before={<Avatar mode='app' src={icons.player[28000032].imageUrl} />}
+					description={`Очков опыта: ${userData.expPoints}`}
+					>
+						Уровень: {userData.expLevel}
+					</SimpleCell>
 
 				</>
 			:
